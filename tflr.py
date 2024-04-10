@@ -1,11 +1,19 @@
 from joblib import load
 
+import json
+
+with open('config.json') as config_file:
+    config = json.load(config_file)
+
+access_key = config['access_key']
+secret_key = config['secret_key']
+
 lr_path = "./lr_classifier.joblib"
 vectorizer_path = "./tfidf_vectorizer.joblib"
 
 vectorizer=""
 lr = ""
-
+classifiers = dict()
 import boto3
 from botocore.exceptions import NoCredentialsError
 
@@ -32,8 +40,8 @@ def load_func(name):
         object_name=f"{name}",
         file_path=f"./{name}",
         endpoint_url="https://storage.yandexcloud.net",
-        access_key="YCAJEFaglepXGGXvwlyeXZPOm",
-        secret_key="YCPd-IJkxTVo3tvmVgEI4dyIGwoComU77MszPrhI"
+        access_key=access_key,
+        secret_key=secret_key
     )
 
 
@@ -46,7 +54,7 @@ def init():
         load_func(genre)
         classifier = load(genre)
         classifiers[genre] = classifier
-    load_func("tfidf_vectorizer.joblib")
+    load_func("multi_tfidf_vectorizer.joblib")
     vectorizer = load(vectorizer_path)
 
 def predict(song_text):
