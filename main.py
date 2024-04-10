@@ -14,5 +14,4 @@ def process_text():
 async def process_text(item: TextItem):
     print(tflr.predict(item.text))
     prediction = tflr.predict(item.text)
-    prediction = prediction.tolist()
     return prediction
