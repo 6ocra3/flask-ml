@@ -1,7 +1,8 @@
 from joblib import load
 import numpy
 import json
-
+import spacy
+nlp = spacy.load("en_core_web_sm")
 with open('config.json') as config_file:
     config = json.load(config_file)
 
@@ -54,9 +55,21 @@ def init():
     load_func("tfidf.joblib")
     vectorizer = load(vectorizer_path)
 
+import re
+
+def clean_song_lyrics(lyrics):
+    cleaned_lyrics = re.sub(r'\b(Chorus|Verse|Intro)\b', '', lyrics, flags=re.IGNORECASE)
+    cleaned_lyrics = re.sub(r'[^\w\s]', '', cleaned_lyrics)
+    cleaned_lyrics = cleaned_lyrics.replace('\n', ' ')
+    return cleaned_lyrics
+
+
 def predict(song_text):
     global vectorizer
-    X = vectorizer.transform([song_text])
+    cleaned_lyrics = clean_song_lyrics(song_text)
+    doc = nlp(cleaned_lyrics)
+    lemmatized_text = " ".join([token.lemma_ for token in doc])
+    X = vectorizer.transform([lemmatized_text])
     genres = ["rock","pop","misc","rap","rb","country"]
     mas = []
     ans = []
