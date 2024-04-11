@@ -8,7 +8,9 @@ class TextItem(BaseModel):
 
 @app.get("/")
 def process_text():
-    return "Hello World"
+    song = "rap nigga money babys"
+    prediction = tflr.predict(song)
+    return prediction
 
 @app.post("/process-text/")
 async def process_text(item: TextItem):
