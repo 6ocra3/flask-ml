@@ -1,6 +1,8 @@
 from joblib import load
 import numpy
 import json
+import os
+import csv
 
 with open('config.json') as config_file:
     config = json.load(config_file)
@@ -8,11 +10,11 @@ with open('config.json') as config_file:
 access_key = config['access_key']
 secret_key = config['secret_key']
 
-
 vectorizer_path = "tfidf.joblib"
 classifiers = dict()
 import boto3
 from botocore.exceptions import NoCredentialsError
+
 
 def download_file_from_yandex_cloud(bucket_name, object_name, file_path, endpoint_url, access_key, secret_key):
     session = boto3.session.Session()
@@ -31,6 +33,7 @@ def download_file_from_yandex_cloud(bucket_name, object_name, file_path, endpoin
     except Exception as e:
         print(f"Произошла ошибка: {e}")
 
+
 def load_func(name):
     download_file_from_yandex_cloud(
         bucket_name="makar-airflow-s3",
@@ -45,6 +48,17 @@ def load_func(name):
 def init():
     global vectorizer, lr
     global classifiers
+
+    reports_file = 'reports.csv'
+
+    if os.path.exists(reports_file):
+        os.remove(reports_file)
+        print(f"File {reports_file} removed.")
+
+    with open(reports_file, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(['lem_lyrics', 'genre'])
+
     genres = ['f_genre_rock_classifier.joblib', 'f_genre_pop_classifier.joblib', 'f_genre_misc_classifier.joblib',
               'f_genre_rap_classifier.joblib', 'f_genre_rb_classifier.joblib', 'f_genre_country_classifier.joblib']
     for genre in genres:
@@ -54,10 +68,11 @@ def init():
     load_func("tfidf.joblib")
     vectorizer = load(vectorizer_path)
 
+
 def predict(song_text):
     global vectorizer
     X = vectorizer.transform([song_text])
-    genres = ["rock","pop","misc","rap","rb","country"]
+    genres = ["rock", "pop", "misc", "rap", "rb", "country"]
     mas = []
     ans = []
     for genre, classifier in classifiers.items():
@@ -66,6 +81,6 @@ def predict(song_text):
     std = numpy.std(mas)
     maxi = max(mas)
     for i in range(len(mas)):
-        if(mas[i]>=maxi-std):
+        if (mas[i] >= maxi - std):
             ans.append(genres[i])
     return ans
